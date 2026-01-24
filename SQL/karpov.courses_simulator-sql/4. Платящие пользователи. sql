@@ -1,0 +1,41 @@
+/* Задача 4.
+Давайте подробнее остановимся на платящих пользователях, копнём немного глубже и выясним, 
+как много платящих пользователей совершают более одного заказа в день. В конце концов нам 
+важно понимать, как в большинстве своём ведут себя наши пользователи — они заходят в приложение,
+чтобы сделать всего один заказ, или же наш сервис настолько хорош, что они готовы пользоваться 
+им несколько раз в день.
+
+Задание:
+Для каждого дня, представленного в таблице user_actions, рассчитайте следующие показатели:
+
+Долю пользователей, сделавших в этот день всего один заказ, в общем количестве платящих пользователей.
+Долю пользователей, сделавших в этот день несколько заказов, в общем количестве платящих пользователей.
+Колонки с показателями назовите соответственно single_order_users_share, several_orders_users_share. 
+Колонку с датами назовите date. Все показатели с долями необходимо выразить в процентах. 
+При расчёте долей округляйте значения до двух знаков после запятой.
+
+Результат должен быть отсортирован по возрастанию даты.
+Поля в результирующей таблице: date, single_order_users_share, several_orders_users_share */
+with paying_users as(SELECT time::date as date,
+                            count (distinct user_id) as paying_users
+                     FROM   user_actions
+                     WHERE  order_id not in (SELECT order_id
+                                             FROM   user_actions
+                                             WHERE  action = 'cancel_order')
+                     GROUP BY date), count_users as(SELECT date,
+                                      count (user_id) filter (WHERE count_orders = 1) as single_order_users,
+                                      count (user_id) filter (WHERE count_orders > 1) as several_orders_users FROM(SELECT time::date as date,
+                                                                                                                   user_id,
+                                                                                                                   count (distinct order_id) as count_orders
+                                                                                                            FROM   user_actions
+                                                                                                            WHERE  order_id not in (SELECT order_id
+                                                                                                                                    FROM   user_actions
+                                                                                                                                    WHERE  action = 'cancel_order')
+                                                                                                            GROUP BY date, user_id) t
+                               GROUP BY date)
+SELECT date,
+       round (100*single_order_users/paying_users::decimal, 2) as single_order_users_share,
+       round (100*several_orders_users/paying_users::decimal, 2) as several_orders_users_share
+FROM   paying_users
+    LEFT JOIN count_users using (date)
+ORDER BY date
