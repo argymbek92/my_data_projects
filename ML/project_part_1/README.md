@@ -1,4 +1,5 @@
 Baseline для финального проекта
+
 Напишите endpoint GET /post/recommendations/, который принимает query-parameters id и limit (limit должен быть по умолчанию равным 10).
 NB: в этом эндпоинте важно прописать слэш в конце, чтобы FastAPI различал эндпоинты /post/recommendations/ и /post/{id}.  
 API должна возвращать структуру List[PostGet] (класс PostGet вы описывали в предыдущих заданиях).
